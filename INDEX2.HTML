@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text Comparator</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+:root {
+  --color-insert: #22C55E;
+  --color-delete: #EF4444;
+  --color-replace: #FACC15;
+  --panel-bg: #ffffffdd;
+  --panel-border: #CBD5E1;
+  --panel-radius: 12px;
+  --panel-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  --font-code: "Fira Code", monospace;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(to bottom, #E0F2FE, #FFFFFF);
+  margin: 0;
+  padding: 20px;
+  color: #0F172A;
+}
+
+.page {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.logo {
+  width: 160px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(332deg, #FFC107, #00bcd4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+textarea.input-area {
+  width: 100%;
+  min-height: 180px;
+  border-radius: 10px;
+  border: 1px solid #CBD5E1;
+  padding: 12px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  resize: vertical;
+  background: #F8FAFC;
+}
+
+textarea.input-area:focus {
+  outline: none;
+  box-shadow: 0 0 8px #60A5FA;
+}
+
+.diff-container {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.diff-panel {
+  flex: 1;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  overflow: auto;
+  min-height: 300px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  position: relative;
+}
+
+.line-numbers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50px;
+  padding: 10px;
+  text-align: right;
+  color: #94A3B8;
+  user-select: none;
+}
+
+.diff-content {
+  margin-left: 55px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 10px;
+}
+
+.highlight { display:inline-block; padding:0 2px; border-radius:3px; }
+.highlight.insert { background: var(--color-insert); color:#fff; }
+.highlight.delete { background: var(--color-delete); color:#fff; }
+.highlight.replace { background: var(--color-replace); color:#3B2F00; }
+
+.summary-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  min-height: 60px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  color: #1E293B;
+  font-size: 13px;
+}
+
+@media (max-width:768px){
+  .diff-container {
+    flex-direction: column;
+  }
+  .line-numbers { width: 40px; }
+  .diff-content { margin-left: 45px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="logo">THE COMPANION</div>
+    <h2>Comparing Companion</h2>
+  </div>
+
+  <div class="controls">
+    <textarea id="inputA" class="input-area" placeholder="Paste Text A"></textarea>
+    <textarea id="inputB" class="input-area" placeholder="Paste Text B"></textarea>
+    <button id="compareBtn" class="btn btn-primary">Compare :)</button>
+    <span id="status" class="ms-2 text-muted">Enter both texts and click Compare</span>
+  </div>
+
+  <div class="diff-container">
+    <div class="diff-panel" id="panelA">
+      <div class="line-numbers" id="linesA"></div>
+      <div class="diff-content" id="contentA"></div>
+    </div>
+    <div class="diff-panel" id="panelB">
+      <div class="line-numbers" id="linesB"></div>
+      <div class="diff-content" id="contentB"></div>
+    </div>
+  </div>
+
+  <div class="summary-box" id="summaryBox">Summary will appear here...</div>
+</div>
+
+<script>
+// Escape HTML
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Keep your existing robust diff logic here
+function strictDiff(a,b){
+    let maxLen = Math.max(a.length,b.length);
+    let outA='', outB='', inserts=0,deletes=0,replaces=0;
+    for(let i=0;i<maxLen;i++){
+        let ca = a[i]||'', cb = b[i]||'';
+        if(ca===cb){ outA+=escapeHtml(ca); outB+=escapeHtml(cb); }
+        else if(!ca && cb){ outB+=`<span class="highlight insert">${escapeHtml(cb)}</span>`; inserts++; }
+        else if(ca && !cb){ outA+=`<span class="highlight delete">${escapeHtml(ca)}</span>`; deletes++; }
+        else { outA+=`<span class="highlight replace">${escapeHtml(ca)}</span>`; outB+=`<span class="highlight replace">${escapeHtml(cb)}</span>`; replaces++; }
+    }
+    return {outA,outB,inserts,deletes,replaces};
+}
+
+// Add line numbers
+function addLineNumbers(str){
+  let lines = str.split('\n').length;
+  return Array.from({length:lines},(_,i)=>i+1).join('\n');
+}
+
+// Scroll sync
+function syncScroll(el1,el2){
+  el1.addEventListener('scroll',()=>{el2.scrollTop=el1.scrollTop;});
+  el2.addEventListener('scroll',()=>{el1.scrollTop=el2.scrollTop;});
+}
+
+// Compare button
+document.getElementById('compareBtn').addEventListener('click',()=>{
+  let a = document.getElementById('inputA').value;
+  let b = document.getElementById('inputB').value;
+  if(!a || !b){ document.getElementById('status').textContent="Both fields required!"; return; }
+
+  let {outA,outB,inserts,deletes,replaces} = strictDiff(a,b);
+  document.getElementById('contentA').innerHTML = outA;
+  document.getElementById('contentB').innerHTML = outB;
+  document.getElementById('linesA').textContent = addLineNumbers(a);
+  document.getElementById('linesB').textContent = addLineNumbers(b);
+
+  document.getElementById('summaryBox').textContent = `Insertions: ${inserts}, Deletions: ${deletes}, Replacements: ${replaces}`;
+  document.getElementById('status').textContent = (inserts+deletes+replaces===0)?"Exact Match ✓":"Differences Detected ✗";
+});
+
+syncScroll(document.getElementById('panelA'),document.getElementById('panelB'));
+</script>
+</body>
+</html>
