@@ -98,6 +98,32 @@
   @media (max-width:880px){
     .header { flex-direction:column; align-items:flex-start; gap:8px; }
   }
+  /* extra small / mobile tweaks */
+  @media (max-width:640px) {
+    .page { padding: 12px; }
+    .logo { width:48px; height:48px; font-size:14px; }
+    .header h3 { font-size:1.05rem; }
+
+    /* stack inputs fully and remove side-by-side flex on smallest screens */
+    .col-12.d-flex { flex-direction:column; }
+    .col-12.d-flex > div { width:100% !important; }
+
+    /* make controls wrap and buttons full-width for easier tapping */
+    .controls { flex-wrap:wrap; gap:8px; }
+    .controls .btn { flex: 1 1 100%; }
+    .modes { order: 3; width:100%; display:flex; justify-content:flex-start; gap:8px; }
+    .ms-auto { order: 4; width:100%; font-size:0.85rem; }
+
+    /* render panes stack and expand */
+    .row.mt-2.g-3 { display:block; }
+    .row.mt-2.g-3 > div { width:100%; margin-bottom:10px; }
+
+    .textarea-small { min-height:140px; }
+    /* mobile sticky bottom action bar (shown only on small screens) */
+    .mobile-sticky { display:flex; align-items:center; gap:8px; position:fixed; left:12px; right:12px; bottom:12px; padding:10px; background:rgba(255,255,255,0.96); border-radius:12px; box-shadow:0 8px 30px rgba(18,38,100,0.08); z-index:9999; }
+    .mobile-sticky .btn { flex:1 1 auto; padding:12px 14px; font-size:1rem; }
+    .mobile-sticky .statusMobile { font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40%; }
+  }
 </style>
 </head>
 <body>
@@ -115,11 +141,11 @@
         <div class="col-12 d-flex gap-3 flex-column flex-md-row">
           <div style="flex:1">
             <label class="form-label">Text A (input)</label>
-            <textarea id="inputA" class="input-area" placeholder="Paste/Type text A here" spellcheck="false"></textarea>
+            <textarea id="inputA" class="input-area textarea-small" placeholder="Paste/Type text A here" spellcheck="false"></textarea>
           </div>
           <div style="flex:1">
             <label class="form-label">Text B (input)</label>
-            <textarea id="inputB" class="input-area" placeholder="Paste/Type text B here" spellcheck="false"></textarea>
+            <textarea id="inputB" class="input-area textarea-small" placeholder="Paste/Type text B here" spellcheck="false"></textarea>
           </div>
         </div>
 
@@ -161,6 +187,12 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Mobile sticky action bar (only visible via CSS on small screens) -->
+  <div id="mobileSticky" class="mobile-sticky" style="display:none;">
+    <div class="statusMobile" id="statusMobile">Ready</div>
+    <button id="mobileCompare" class="btn btn-primary">Compare</button>
   </div>
 
 <script>
@@ -357,6 +389,34 @@ function compareTextMinimal(a,b){
 /* Wiring: compare on button, input (debounced), paste, Enter key */
 const compareBtn = document.getElementById('compareBtn');
 compareBtn.addEventListener('click', compareDispatcher);
+
+// Mobile sticky wiring: show the sticky bar when viewport is small and wire button/status
+const mobileSticky = document.getElementById('mobileSticky');
+const mobileCompare = document.getElementById('mobileCompare');
+const statusMobile = document.getElementById('statusMobile');
+
+function updateMobileVisibility(){
+  if (window.innerWidth <= 640) {
+    mobileSticky.style.display = 'flex';
+    // hide desktop inline compare if present
+    const inlineBtn = document.querySelector('.controls .btn');
+    if (inlineBtn) inlineBtn.style.display = 'none';
+  } else {
+    mobileSticky.style.display = 'none';
+    const inlineBtn = document.querySelector('.controls .btn');
+    if (inlineBtn) inlineBtn.style.display = '';
+  }
+}
+
+mobileCompare.addEventListener('click', () => { compareDispatcher(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+// Mirror status text changes into the mobile sticky status element
+const statusEl = document.getElementById('status');
+const obs = new MutationObserver(() => { statusMobile.textContent = statusEl.textContent; });
+obs.observe(statusEl, { childList: true, characterData: true, subtree: true });
+
+window.addEventListener('resize', updateMobileVisibility);
+updateMobileVisibility();
 
 const inA = document.getElementById('inputA'), inB = document.getElementById('inputB');
 
