@@ -10,16 +10,18 @@
 
 <style>
   :root{
-    --glass-bg: rgba(255,255,255,0.55);
-    --glass-border: rgba(255,255,255,0.35);
-    --accent: #6f8bff;
-    --accent-2:#9be7ff;
-    --muted:#718096;
-    --good: #22c55e;
-    --bad: #ef4444;
-    --replace: linear-gradient(90deg, rgba(255,243,160,0.95), rgba(255,229,153,0.95));
-    --del: linear-gradient(90deg, rgba(255,214,214,0.95), rgba(255,186,186,0.95));
-    --ins: linear-gradient(90deg, rgba(223,247,217,0.95), rgba(187,239,199,0.95));
+    --glass-bg: rgba(250,251,255,0.72);
+    --glass-border: rgba(220,227,255,0.55);
+    --accent: #5061ff;
+    --accent-2: #6fd6ff;
+    --muted:#607089;
+    --good: #16a34a;
+    --bad: #dc2626;
+    --replace: linear-gradient(90deg, rgba(255,250,230,0.98), rgba(255,245,215,0.98));
+    --del: linear-gradient(90deg, rgba(255,235,237,0.98), rgba(255,215,217,0.98));
+    --ins: linear-gradient(90deg, rgba(235,253,242,0.98), rgba(210,247,221,0.98));
+    --card-radius: 14px;
+    --soft-shadow: 0 10px 40px rgba(16,24,40,0.06);
   }
 
   html,body { height:100%; background: linear-gradient(180deg,#f2f7ff 0%, #f8fbff 50%, #fbfbff 100%); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0f172a; padding:22px; }
@@ -33,20 +35,20 @@
   }
 
   .logo {
-    width:56px; height:56px; border-radius:12px;
-    background: linear-gradient(135deg,var(--accent), #8fd3ff);
-    box-shadow: 0 8px 30px rgba(97,107,255,0.12), inset 0 -6px 18px rgba(255,255,255,0.18);
-    display:flex; align-items:center; justify-content:center; color:white; font-weight:700;
+    width:64px; height:64px; border-radius:16px;
+    background: linear-gradient(135deg,var(--accent), var(--accent-2));
+    box-shadow: var(--soft-shadow), inset 0 -6px 18px rgba(255,255,255,0.22);
+    display:flex; align-items:center; justify-content:center; color:white; font-weight:800; font-size:18px;
     transform:translateZ(0);
   }
 
   .card-glass {
-    background: var(--glass-bg);
+    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.85));
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(6px) saturate(120%);
-    border-radius:12px;
-    padding:14px;
-    box-shadow: 0 8px 30px rgba(18,38,100,0.06);
+    backdrop-filter: blur(8px) saturate(120%);
+    border-radius:var(--card-radius);
+    padding:16px;
+    box-shadow: var(--soft-shadow);
   }
 
   .row-gap { gap:12px; }
@@ -54,21 +56,21 @@
   label.form-label { font-weight:600; font-size:0.95rem; color:#0b1220; }
 
   textarea.input-area {
-    width:100%; min-height:200px; padding:12px; border-radius:10px;
-    border: 1px solid rgba(15,23,42,0.07);
-    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,255,0.7));
+    width:100%; min-height:200px; padding:14px; border-radius:12px;
+    border: 1px solid rgba(96,112,144,0.06);
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,255,0.9));
     font-family: "Courier New", monospace;
     font-size:13px; color:#0b1220;
     resize:vertical; white-space:pre-wrap;
-    transition: box-shadow .18s ease, transform .08s ease;
+    transition: box-shadow .22s cubic-bezier(.2,.9,.2,1), transform .12s ease;
   }
   textarea.input-area:focus { outline:none; box-shadow: 0 6px 18px rgba(111,139,255,0.12); transform: translateY(-1px); }
 
   .render {
-    min-height:200px; max-height:420px; overflow:auto; padding:12px;
-    border-radius:10px; font-family:"Courier New", monospace; white-space:pre-wrap; word-break:break-word;
-    background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,255,0.55));
-    border: 1px solid rgba(15,23,42,0.05);
+    min-height:200px; max-height:420px; overflow:auto; padding:14px;
+    border-radius:12px; font-family:"Courier New", monospace; white-space:pre-wrap; word-break:break-word;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,249,255,0.96));
+    border: 1px solid rgba(96,112,144,0.04);
   }
 
   .render .plain { color:#0b1220; }
@@ -76,6 +78,21 @@
   .highlight {
     display:inline-block; padding:0 4px; border-radius:5px;
     transition: transform .12s ease;
+  }
+  /* animation helpers */
+  @keyframes fadeInUp {
+    from { opacity:0; transform: translateY(8px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  @keyframes pulseGlow {
+    0% { box-shadow: 0 6px 18px rgba(80,97,255,0.06); }
+    50% { box-shadow: 0 10px 28px rgba(80,97,255,0.12); }
+    100% { box-shadow: 0 6px 18px rgba(80,97,255,0.06); }
+  }
+  @keyframes highlightFlash {
+    0% { background-color: rgba(255,250,230,0.98); }
+    50% { background-color: rgba(255,245,215,0.98); }
+    100% { background-color: rgba(255,250,230,0.98); }
   }
   .highlight.replace { background: var(--replace); border: 1px solid rgba(222,190,90,0.6); color:#3b2f00; box-shadow: 0 6px 18px rgba(222,190,90,0.06); }
   .highlight.del { background: var(--del); border: 1px solid rgba(231,130,130,0.6); color:#4b1a1a; box-shadow: 0 6px 18px rgba(231,130,130,0.06); }
@@ -88,11 +105,20 @@
   .status { font-weight:700; margin-left:6px; color:var(--muted); }
 
   .summary { margin-top:12px; padding:10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,255,0.55)); border:1px solid rgba(15,23,42,0.04); min-height:88px; font-family:monospace; white-space:pre-wrap; }
+  .summary { margin-top:12px; padding:12px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,249,255,0.96)); border:1px solid rgba(96,112,144,0.04); min-height:88px; font-family:monospace; white-space:pre-wrap; }
 
   .legend { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:0.88rem; }
   .legend .box { width:18px; height:18px; border-radius:5px; border:1px solid rgba(0,0,0,0.04); display:inline-block; margin-right:6px; vertical-align:middle; }
 
   .footer-note { margin-top:10px; color:var(--muted); font-size:0.9rem; }
+
+  /* symbols panel specifics */
+  .sym-badge { display:inline-block; padding:6px 8px; border-radius:8px; background:rgba(96,112,144,0.06); color:var(--muted); margin-right:8px; font-weight:600; }
+
+  /* Black/White source indicator boxes */
+  .bw-box { display:inline-block; width:14px; height:14px; border-radius:3px; margin-left:8px; vertical-align:middle; border:1px solid rgba(0,0,0,0.06); }
+  .bw-a { background: #0b1220; } /* black for A */
+  .bw-b { background: #ffffff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); } /* white for B */
 
   /* small screens */
   @media (max-width:880px){
@@ -119,8 +145,8 @@
     .row.mt-2.g-3 > div { width:100%; margin-bottom:10px; }
 
     .textarea-small { min-height:140px; }
-    /* mobile sticky bottom action bar (shown only on small screens) */
-    .mobile-sticky { display:flex; align-items:center; gap:8px; position:fixed; left:12px; right:12px; bottom:12px; padding:10px; background:rgba(255,255,255,0.96); border-radius:12px; box-shadow:0 8px 30px rgba(18,38,100,0.08); z-index:9999; }
+  /* mobile sticky bottom action bar (shown only on small screens) */
+  .mobile-sticky { display:flex; align-items:center; gap:8px; position:fixed; left:12px; right:12px; bottom:12px; padding:10px; background:linear-gradient(90deg, rgba(255,255,255,0.98), rgba(246,249,255,0.98)); border-radius:12px; box-shadow:var(--soft-shadow); z-index:9999; }
     .mobile-sticky .btn { flex:1 1 auto; padding:12px 14px; font-size:1rem; }
     .mobile-sticky .statusMobile { font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40%; }
   }
@@ -131,8 +157,8 @@
     <div class="header">
       <div class="logo">DIFF</div>
       <div>
-        <h3 style="margin:0">Code / Text Diff</h3>
-        <div style="color:var(--muted);font-size:0.95rem">Generic code comparator & text comparator — inputs never modified.</div>
+  <h3 style="margin:0">Compare — Source A vs Source B</h3>
+  <div style="color:var(--muted);font-size:0.95rem">Quick token-aware and text comparisons. Inputs are not modified.</div>
       </div>
     </div>
 
@@ -149,6 +175,18 @@
           </div>
         </div>
 
+        <!-- Symbols / control-chars panel -->
+        <div id="symbolsPanel" class="card-glass" style="margin-top:12px; display:flex; gap:12px; align-items:center;">
+          <div style="flex:1">
+            <strong>Control characters</strong>
+            <div id="symbolsSummary" style="color:var(--muted); margin-top:6px;">No control characters detected.</div>
+          </div>
+          <div style="min-width:220px; text-align:right; color:var(--muted); font-size:0.95rem">
+            <div>Tab: <span id="tabInfo">—</span></div>
+            <div>CHR codes: <span id="chrInfo">—</span></div>
+          </div>
+        </div>
+
         <div class="controls">
           <button id="compareBtn" class="btn btn-primary">Compare</button>
           <div id="status" class="status">Ready</div>
@@ -162,16 +200,16 @@
             </label>
           </div>
 
-          <div class="ms-auto small-muted symbols">Symbols: ␣=space ⇥=tab ↵=newline ␍=CR</div>
+          <!-- symbols panel removed from inline controls; replaced by dedicated symbols panel below -->
         </div>
 
         <div class="row mt-2 g-3">
           <div class="col-md-6">
-            <label class="form-label">Highlighted view — A (readonly)</label>
+            <label class="form-label">Source A — Highlighted (readonly) <span class="bw-box bw-a" title="Source A"></span></label>
             <div id="renderA" class="render"><span class="plain">(result appears here)</span></div>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Highlighted view — B (readonly)</label>
+            <label class="form-label">Source B — Highlighted (readonly) <span class="bw-box bw-b" title="Source B"></span></label>
             <div id="renderB" class="render"><span class="plain">(result appears here)</span></div>
           </div>
         </div>
@@ -179,9 +217,9 @@
         <div>
           <div class="summary" id="summaryBox">Summary will appear here...</div>
           <div class="legend">
-            <div class="box" style="background:var(--replace)"></div> Replace / differing region &nbsp;
-            <div class="box" style="background:var(--del)"></div> Present in A, missing in B &nbsp;
-            <div class="box" style="background:var(--ins)"></div> Inserted in B (missing in A)
+            <div class="box" style="background:var(--replace)"></div> Difference region &nbsp;
+            <div class="box" style="background:var(--del)"></div> Removed from B (present in A) &nbsp;
+            <div class="box" style="background:var(--ins)"></div> Added in B (missing in A)
           </div>
           <div class="footer-note">Auto-compare on typing/paste. Press <strong>Enter</strong> in any input to force immediate compare.</div>
         </div>
@@ -316,6 +354,8 @@ function compareCodeGeneric(a,b){
   const tokenSnippetA = a.slice(aStartIdx, aEndIdx) || '(none)';
   const tokenSnippetB = b.slice(bStartIdx, bEndIdx) || '(none)';
   summary.textContent = `Token-aware diff (minimal differing region)\nA [${aStartIdx+1}..${aEndIdx}]: ${tokenSnippetA}\nB [${bStartIdx+1}..${bEndIdx}]: ${tokenSnippetB}\n\nToken-level prefix matched: ${pre}, suffix matched: ${suf}\nEdit the token region in the input that needs correction.`;
+  // animate results briefly
+  animateResults();
 }
 
 /* ===========================
@@ -384,6 +424,8 @@ function compareTextMinimal(a,b){
   if (res.posA) s += `A pos [${res.posA.from}..${res.posA.to}]  `;
   if (res.posB) s += `B pos [${res.posB.from}..${res.posB.to}]`;
   summary.textContent = s;
+  // animate results briefly
+  animateResults();
 }
 
 /* Wiring: compare on button, input (debounced), paste, Enter key */
@@ -394,6 +436,30 @@ compareBtn.addEventListener('click', compareDispatcher);
 const mobileSticky = document.getElementById('mobileSticky');
 const mobileCompare = document.getElementById('mobileCompare');
 const statusMobile = document.getElementById('statusMobile');
+
+  // Animation helper: briefly animate result panels and summary
+  function animateResults(){
+    try {
+      const rA = document.getElementById('renderA');
+      const rB = document.getElementById('renderB');
+      const summ = document.getElementById('summaryBox');
+      [rA, rB, summ].forEach(el => {
+        if (!el) return;
+        el.style.animation = 'none';
+        // force reflow to restart animation
+        void el.offsetWidth;
+        el.style.animation = 'fadeInUp 420ms ease both';
+      });
+
+      // Add a subtle pulse to the card container
+      const card = document.querySelector('.card-glass');
+      if (card) {
+        card.style.transition = 'box-shadow 420ms ease';
+        card.style.boxShadow = '0 16px 48px rgba(80,97,255,0.10)';
+        setTimeout(()=>{ card.style.boxShadow = ''; }, 520);
+      }
+    } catch(e){ console.warn('animation failed', e); }
+  }
 
 function updateMobileVisibility(){
   if (window.innerWidth <= 640) {
@@ -429,6 +495,60 @@ inA.addEventListener('paste', ()=> setTimeout(compareDispatcher,40));
 inB.addEventListener('paste', ()=> setTimeout(compareDispatcher,40));
 inA.addEventListener('keydown', (e)=> { if (e.key === 'Enter') { setTimeout(compareDispatcher,20); }});
 inB.addEventListener('keydown', (e)=> { if (e.key === 'Enter') { setTimeout(compareDispatcher,20); }});
+
+// Control-char / symbols scanning
+function charCodeLabel(ch){
+  const code = ch.charCodeAt(0);
+  return `${vis(ch)} (CHR ${code})`;
+}
+
+function scanForControlChars(s){
+  const counts = {};
+  for (let i=0;i<s.length;i++){
+    const c = s[i];
+    if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
+      counts[c] = (counts[c]||0) + 1;
+    }
+  }
+  return counts;
+}
+
+function updateSymbolsPanel(){
+  const a = inA.value || '';
+  const b = inB.value || '';
+  const both = a + '\n----\n' + b;
+  const counts = scanForControlChars(both);
+  const summary = document.getElementById('symbolsSummary');
+  const tabInfo = document.getElementById('tabInfo');
+  const chrInfo = document.getElementById('chrInfo');
+
+  const parts = [];
+  if (counts[' ']) parts.push(`<span class="sym-badge">Space: ${counts[' ']}</span>`);
+  if (counts['\t']) parts.push(`<span class="sym-badge">Tab: ${counts['\t']}</span>`);
+  if (counts['\n']) parts.push(`<span class="sym-badge">LF: ${counts['\n']}</span>`);
+  if (counts['\r']) parts.push(`<span class="sym-badge">CR: ${counts['\r']}</span>`);
+
+  summary.innerHTML = parts.length ? parts.join(' ') : 'No control characters detected.';
+
+  // Tab info: show visible token and decimal code
+  if (counts['\t']){
+    tabInfo.textContent = `shown as ⇥ — ${counts['\t']} occurrences`;
+  } else { tabInfo.textContent = 'none'; }
+
+  // chr info: list present codes
+  const codes = [];
+  if (counts[' ']) codes.push('32');
+  if (counts['\t']) codes.push('9');
+  if (counts['\n']) codes.push('10');
+  if (counts['\r']) codes.push('13');
+  chrInfo.textContent = codes.length ? codes.join(', ') : '—';
+}
+
+// wire symbols update on input and after compare
+inA.addEventListener('input', debounce(updateSymbolsPanel, 120));
+inB.addEventListener('input', debounce(updateSymbolsPanel, 120));
+// update initially
+updateSymbolsPanel();
 
 /* Initial status */
 document.getElementById('status').textContent = 'Ready — paste or type then Compare';
