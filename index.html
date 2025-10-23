@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Difference Finder</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  :root{
+    --glass-bg: rgba(255,255,255,0.55);
+    --glass-border: rgba(255,255,255,0.35);
+    --accent: #6f8bff;
+    --accent-2:#9be7ff;
+    --muted:#718096;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --replace: linear-gradient(90deg, rgba(255,243,160,0.95), rgba(255,229,153,0.95));
+    --del: linear-gradient(90deg, rgba(255,214,214,0.95), rgba(255,186,186,0.95));
+    --ins: linear-gradient(90deg, rgba(223,247,217,0.95), rgba(187,239,199,0.95));
+  }
+
+  html,body { height:100%; background: linear-gradient(180deg,#f2f7ff 0%, #f8fbff 50%, #fbfbff 100%); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0f172a; padding:22px; }
+
+  .page {
+    max-width:1100px; margin:0 auto;
+  }
+
+  .header {
+    display:flex; align-items:center; gap:14px; margin-bottom:12px;
+  }
+
+  .logo {
+    width:56px; height:56px; border-radius:12px;
+    background: linear-gradient(135deg,var(--accent), #8fd3ff);
+    box-shadow: 0 8px 30px rgba(97,107,255,0.12), inset 0 -6px 18px rgba(255,255,255,0.18);
+    display:flex; align-items:center; justify-content:center; color:white; font-weight:700;
+    transform:translateZ(0);
+  }
+
+  .card-glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(6px) saturate(120%);
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 8px 30px rgba(18,38,100,0.06);
+  }
+
+  .row-gap { gap:12px; }
+
+  label.form-label { font-weight:600; font-size:0.95rem; color:#0b1220; }
+
+  textarea.input-area {
+    width:100%; min-height:200px; padding:12px; border-radius:10px;
+    border: 1px solid rgba(15,23,42,0.07);
+    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,255,0.7));
+    font-family: "Courier New", monospace;
+    font-size:13px; color:#0b1220;
+    resize:vertical; white-space:pre-wrap;
+    transition: box-shadow .18s ease, transform .08s ease;
+  }
+  textarea.input-area:focus { outline:none; box-shadow: 0 6px 18px rgba(111,139,255,0.12); transform: translateY(-1px); }
+
+  .render {
+    min-height:200px; max-height:420px; overflow:auto; padding:12px;
+    border-radius:10px; font-family:"Courier New", monospace; white-space:pre-wrap; word-break:break-word;
+    background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,255,0.55));
+    border: 1px solid rgba(15,23,42,0.05);
+  }
+
+  .render .plain { color:#0b1220; }
+
+  .highlight {
+    display:inline-block; padding:0 4px; border-radius:5px;
+    transition: transform .12s ease;
+  }
+  .highlight.replace { background: var(--replace); border: 1px solid rgba(222,190,90,0.6); color:#3b2f00; box-shadow: 0 6px 18px rgba(222,190,90,0.06); }
+  .highlight.del { background: var(--del); border: 1px solid rgba(231,130,130,0.6); color:#4b1a1a; box-shadow: 0 6px 18px rgba(231,130,130,0.06); }
+  .highlight.ins { background: var(--ins); border: 1px solid rgba(120,200,132,0.6); color:#0b4b27; box-shadow: 0 6px 18px rgba(120,200,132,0.05); }
+
+  .controls { display:flex; align-items:center; gap:10px; margin-top:12px; }
+  .modes { display:flex; gap:10px; align-items:center; }
+  .mode-check { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:9px; cursor:pointer; background:transparent; border:1px solid rgba(11,17,34,0.04); }
+  .mode-check input { transform:scale(1.05); }
+  .status { font-weight:700; margin-left:6px; color:var(--muted); }
+
+  .summary { margin-top:12px; padding:10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,255,0.55)); border:1px solid rgba(15,23,42,0.04); min-height:88px; font-family:monospace; white-space:pre-wrap; }
+
+  .legend { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:0.88rem; }
+  .legend .box { width:18px; height:18px; border-radius:5px; border:1px solid rgba(0,0,0,0.04); display:inline-block; margin-right:6px; vertical-align:middle; }
+
+  .footer-note { margin-top:10px; color:var(--muted); font-size:0.9rem; }
+
+  /* small screens */
+  @media (max-width:880px){
+    .header { flex-direction:column; align-items:flex-start; gap:8px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="logo">DIFF</div>
+      <div>
+        <h3 style="margin:0">Code / Text Diff</h3>
+        <div style="color:var(--muted);font-size:0.95rem">Generic code comparator & text comparator — inputs never modified.</div>
+      </div>
+    </div>
+
+    <div class="card-glass">
+      <div class="row row-gap">
+        <div class="col-12 d-flex gap-3 flex-column flex-md-row">
+          <div style="flex:1">
+            <label class="form-label">Text A (input)</label>
+            <textarea id="inputA" class="input-area" placeholder="Paste/Type text A here" spellcheck="false"></textarea>
+          </div>
+          <div style="flex:1">
+            <label class="form-label">Text B (input)</label>
+            <textarea id="inputB" class="input-area" placeholder="Paste/Type text B here" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="compareBtn" class="btn btn-primary">Compare</button>
+          <div id="status" class="status">Ready</div>
+
+          <div class="modes ms-3">
+            <label class="mode-check" title="Generic code comparator — token-aware">
+              <input type="checkbox" id="modeCode"> <span style="font-weight:600">Code comparator</span>
+            </label>
+            <label class="mode-check" title="Text comparator — minimal unmatched substring">
+              <input type="checkbox" id="modeText"> <span style="font-weight:600">Text comparator</span>
+            </label>
+          </div>
+
+          <div class="ms-auto small-muted symbols">Symbols: ␣=space ⇥=tab ↵=newline ␍=CR</div>
+        </div>
+
+        <div class="row mt-2 g-3">
+          <div class="col-md-6">
+            <label class="form-label">Highlighted view — A (readonly)</label>
+            <div id="renderA" class="render"><span class="plain">(result appears here)</span></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Highlighted view — B (readonly)</label>
+            <div id="renderB" class="render"><span class="plain">(result appears here)</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="summary" id="summaryBox">Summary will appear here...</div>
+          <div class="legend">
+            <div class="box" style="background:var(--replace)"></div> Replace / differing region &nbsp;
+            <div class="box" style="background:var(--del)"></div> Present in A, missing in B &nbsp;
+            <div class="box" style="background:var(--ins)"></div> Inserted in B (missing in A)
+          </div>
+          <div class="footer-note">Auto-compare on typing/paste. Press <strong>Enter</strong> in any input to force immediate compare.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Utility functions */
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function vis(ch){
+  if (ch === ' ') return '␣';
+  if (ch === '\t') return '⇥';
+  if (ch === '\r') return '␍';
+  if (ch === '\n') return '↵';
+  return escapeHtml(ch);
+}
+
+/* Mode selector (two checkboxes behave single-choice) */
+const modeCode = document.getElementById('modeCode');
+const modeText = document.getElementById('modeText');
+[modeCode, modeText].forEach(cb => cb.addEventListener('change', ()=> {
+  if (cb.checked) {
+    [modeCode, modeText].forEach(x => { if (x !== cb) x.checked = false; });
+  }
+}));
+
+/* Main dispatcher */
+function compareDispatcher() {
+  const a = document.getElementById('inputA').value || '';
+  const b = document.getElementById('inputB').value || '';
+  if (modeCode.checked) return compareCodeGeneric(a,b);
+  // default or modeText.checked
+  return compareTextMinimal(a,b);
+}
+
+/* ===========================
+   Generic Code Comparator
+   - Tokenizes generally (strings, identifiers, numbers, operators, comments, whitespace)
+   - Removes whitespace/comments for token comparison
+   - Finds minimal differing token region, maps to char indices, highlights region
+   =========================== */
+
+function tokenizeGeneric(s){
+  // groups: 1=single-quoted, 2=double-quoted, 3=identifier, 4=number, 5=operator/punct, 6=whitespace, 7=line-comment (// or #), 8=block comment
+  const re = /('(?:''|[^'])*')|("(?:\\"|[^"])*")|([A-Za-z_][A-Za-z0-9_$.]*)|(\d+\.\d+|\d+)|([{}()[\];,.:+\-*/%<>=!&|^~?@#])|(\s+)|(\/\/[^\n]*|#[^\n]*)|(\/\*[\s\S]*?\*\/)/g;
+  const tokens = [];
+  let m;
+  while ((m = re.exec(s)) !== null) {
+    const raw = m[0];
+    let type = 'other';
+    if (m[1]) type = 'squote';
+    else if (m[2]) type = 'dquote';
+    else if (m[3]) type = 'ident';
+    else if (m[4]) type = 'number';
+    else if (m[5]) type = 'op';
+    else if (m[6]) type = 'ws';
+    else if (m[7]) type = 'linecomment';
+    else if (m[8]) type = 'blockcomment';
+    tokens.push({ raw, type, start: m.index, end: m.index + raw.length });
+  }
+  return tokens;
+}
+
+function compactTokensNoWSComments(tokens){
+  return tokens.map((t, idx) => ({...t, origIndex: idx})).filter(t => t.type !== 'ws' && t.type !== 'linecomment' && t.type !== 'blockcomment');
+}
+
+function tokensEqual(t1, t2){
+  if (!t1 || !t2) return false;
+  // identifiers are case-sensitive for most languages (keeps exact). You could implement case-insens optional.
+  if (t1.type === 'ident' && t2.type === 'ident') return t1.raw === t2.raw;
+  // compare literal tokens literally (strings, numbers, ops)
+  return t1.raw === t2.raw && t1.type === t2.type;
+}
+
+function findPrefixSuffixTokens(A,B){
+  let pre = 0;
+  while (pre < A.length && pre < B.length && tokensEqual(A[pre], B[pre])) pre++;
+  let suf = 0;
+  while ((A.length - 1 - suf) >= pre && (B.length - 1 - suf) >= pre && tokensEqual(A[A.length - 1 - suf], B[B.length - 1 - suf])) suf++;
+  return { pre, suf };
+}
+
+function wrapRange(s, start, end, cls){
+  if (start >= end) return escapeHtml(s);
+  return escapeHtml(s.slice(0,start)) + `<span class="highlight ${cls}">` + escapeHtml(s.slice(start,end)) + `</span>` + escapeHtml(s.slice(end));
+}
+
+function compareCodeGeneric(a,b){
+  const renderA = document.getElementById('renderA'), renderB = document.getElementById('renderB'), summary = document.getElementById('summaryBox'), status = document.getElementById('status');
+
+  const taAll = tokenizeGeneric(a), tbAll = tokenizeGeneric(b);
+  const ta = compactTokensNoWSComments(taAll), tb = compactTokensNoWSComments(tbAll);
+
+  // if token streams identical
+  if (ta.length === tb.length && ta.every((t,i)=> tokensEqual(t,tb[i]))) {
+    status.textContent = 'Match ✓ (code)';
+    status.style.color = 'var(--good)';
+    renderA.innerHTML = escapeHtml(a) || '<span class="plain">(empty)</span>';
+    renderB.innerHTML = escapeHtml(b) || '<span class="plain">(empty)</span>';
+    summary.textContent = 'No token-level differences found.';
+    return;
+  }
+
+  const { pre, suf } = findPrefixSuffixTokens(ta,tb);
+
+  // char bounds for minimal differing region (in original strings)
+  const startTokenA = (pre < ta.length) ? ta[pre] : null;
+  const endTokenA = (pre < ta.length) ? ta[ta.length - 1 - suf] : null;
+  const aStartIdx = startTokenA ? startTokenA.start : a.length;
+  const aEndIdx = endTokenA ? endTokenA.end : aStartIdx;
+
+  const startTokenB = (pre < tb.length) ? tb[pre] : null;
+  const endTokenB = (pre < tb.length) ? tb[tb.length - 1 - suf] : null;
+  const bStartIdx = startTokenB ? startTokenB.start : b.length;
+  const bEndIdx = endTokenB ? endTokenB.end : bStartIdx;
+
+  renderA.innerHTML = wrapRange(a, aStartIdx, aEndIdx, 'replace');
+  renderB.innerHTML = wrapRange(b, bStartIdx, bEndIdx, 'replace');
+
+  status.textContent = 'Mismatch — code tokens differ';
+  status.style.color = 'var(--bad)';
+
+  // small token-aware summary
+  const tokenSnippetA = a.slice(aStartIdx, aEndIdx) || '(none)';
+  const tokenSnippetB = b.slice(bStartIdx, bEndIdx) || '(none)';
+  summary.textContent = `Token-aware diff (minimal differing region)\nA [${aStartIdx+1}..${aEndIdx}]: ${tokenSnippetA}\nB [${bStartIdx+1}..${bEndIdx}]: ${tokenSnippetB}\n\nToken-level prefix matched: ${pre}, suffix matched: ${suf}\nEdit the token region in the input that needs correction.`;
+}
+
+/* ===========================
+   Text minimal unmatched comparator
+   - Longest common prefix + suffix -> minimal unmatched substrings
+   =========================== */
+
+function minimalUnmatched(a,b){
+  const nA = a.length, nB = b.length;
+  let pre = 0;
+  while (pre < nA && pre < nB && a[pre] === b[pre]) pre++;
+  let suf = 0;
+  while ((nA - 1 - suf) >= pre && (nB - 1 - suf) >= pre && a[nA - 1 - suf] === b[nB - 1 - suf]) suf++;
+  const startA = pre;
+  const endA = Math.max(pre - 1, nA - suf - 1);
+  const startB = pre;
+  const endB = Math.max(pre - 1, nB - suf - 1);
+  const unmatchedA = (endA >= startA) ? a.slice(startA, endA + 1) : '';
+  const unmatchedB = (endB >= startB) ? b.slice(startB, endB + 1) : '';
+  return {
+    pre, suf,
+    unmatchedA, unmatchedB,
+    posA: unmatchedA ? { from: startA + 1, to: endA + 1 } : null,
+    posB: unmatchedB ? { from: startB + 1, to: endB + 1 } : null
+  };
+}
+
+function highlightMinimal(original, start, end){
+  if (start >= end) return escapeHtml(original) || '<span class="plain">(empty)</span>';
+  return escapeHtml(original.slice(0,start)) + `<span class="highlight replace">` + escapeHtml(original.slice(start,end)) + `</span>` + escapeHtml(original.slice(end));
+}
+
+function showVisibleSnippet(s){
+  let out = '';
+  for (let ch of s) out += vis(ch);
+  return out || '(none)';
+}
+
+function compareTextMinimal(a,b){
+  const renderA = document.getElementById('renderA'), renderB = document.getElementById('renderB'), summary = document.getElementById('summaryBox'), status = document.getElementById('status');
+
+  if (a === b) {
+    status.textContent = 'Match ✓ (text)';
+    status.style.color = 'var(--good)';
+    renderA.innerHTML = escapeHtml(a) || '<span class="plain">(empty)</span>';
+    renderB.innerHTML = escapeHtml(b) || '<span class="plain">(empty)</span>';
+    summary.textContent = 'No differences found.';
+    return;
+  }
+
+  const res = minimalUnmatched(a,b);
+  const aStart = res.posA ? (res.posA.from - 1) : 0;
+  const aEnd = res.posA ? (res.posA.to) : 0;
+  const bStart = res.posB ? (res.posB.from - 1) : 0;
+  const bEnd = res.posB ? (res.posB.to) : 0;
+
+  renderA.innerHTML = highlightMinimal(a, aStart, aEnd);
+  renderB.innerHTML = highlightMinimal(b, bStart, bEnd);
+
+  status.textContent = 'Mismatch — minimal unmatched shown';
+  status.style.color = 'var(--bad)';
+
+  let s = '';
+  s += `Unmatched in A: ${showVisibleSnippet(res.unmatchedA)}\n`;
+  s += `Unmatched in B: ${showVisibleSnippet(res.unmatchedB)}\n`;
+  if (res.posA) s += `A pos [${res.posA.from}..${res.posA.to}]  `;
+  if (res.posB) s += `B pos [${res.posB.from}..${res.posB.to}]`;
+  summary.textContent = s;
+}
+
+/* Wiring: compare on button, input (debounced), paste, Enter key */
+const compareBtn = document.getElementById('compareBtn');
+compareBtn.addEventListener('click', compareDispatcher);
+
+const inA = document.getElementById('inputA'), inB = document.getElementById('inputB');
+
+function debounce(fn, ms=200){
+  let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+}
+inA.addEventListener('input', debounce(compareDispatcher,200));
+inB.addEventListener('input', debounce(compareDispatcher,200));
+inA.addEventListener('paste', ()=> setTimeout(compareDispatcher,40));
+inB.addEventListener('paste', ()=> setTimeout(compareDispatcher,40));
+inA.addEventListener('keydown', (e)=> { if (e.key === 'Enter') { setTimeout(compareDispatcher,20); }});
+inB.addEventListener('keydown', (e)=> { if (e.key === 'Enter') { setTimeout(compareDispatcher,20); }});
+
+/* Initial status */
+document.getElementById('status').textContent = 'Ready — paste or type then Compare';
+document.getElementById('summaryBox').textContent = 'Summary appears here.';
+</script>
+</body>
+</html>
